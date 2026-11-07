@@ -1,0 +1,9 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 63 63" width="63" height="63">
+	<title>reticle</title>
+	<defs>
+		<image  width="63" height="33" id="img1" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD8AAAAhAQMAAABUTeF3AAAAAXNSR0IB2cksfwAAAAZQTFRFAAAAAAAApWe5zwAAAAJ0Uk5T/wDltzBKAAAARUlEQVR4nGNkYGCoLRZgYGD8z8Dwk52B4T+I8a2rAcJ4d8kBwrjHpABh7DMSgDD+MUEVf+xvQBOBMw7GP8AlNSBqKGAAAHIlZ+LT+JgtAAAAAElFTkSuQmCC"/>
+	</defs>
+	<style>
+	</style>
+	<use id="Background" href="#img1" x="0" y="30"/>
+</svg>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projectile Lab · Firing Range</title>
+  <link rel="icon" type="image/svg+xml" href="./range-favicon.svg">
+  <link rel="stylesheet" href="./css/range.css">
+  <script type="importmap">{"imports":{"three":"../lib/threejs/r171/three.module.min.js","three/addons/controls/OrbitControls.js":"../lib/threejs/r171/OrbitControls.module.min.js"}}</script>
+</head>
+<body>
+  <header><a href="../" class="back" aria-label="Back to main scene">↖</a><div><div class="eyebrow">FIELD TEST / 001</div><h1>PROJECTILE LAB<span> / FIRING RANGE</span></h1></div><span class="live"><i></i> RANGE LIVE</span></header>
+  <aside class="panel">
+    <div class="eyebrow">WEAPON SYSTEMS</div>
+    <button class="weapon selected" data-weapon="machineGun"><span class="number">01</span><span><strong>Machine gun · original</strong><small>115 m/s · 706 rpm · amber</small></span><kbd>1</kbd></button>
+    <button class="weapon" data-weapon="machineGunRed"><span class="number">03</span><span><strong>Machine gun · red</strong><small>55 m/s · 375 rpm · large rounds</small></span><kbd>3</kbd></button>
+    <button class="weapon" data-weapon="rocket"><span class="number">02</span><span><strong>Rocket launcher</strong><small>Smoke trail · explosive impact</small></span><kbd>2</kbd></button>
+    <div class="settings"><label><span>Live comparison</span><input id="demo" type="checkbox" checked></label><label><span>Slow motion <b id="speed-label">1×</b></span><input id="slow" type="checkbox"></label><label for="glow">Flash intensity <b id="glow-label">100%</b></label><input id="glow" type="range" min="0.2" max="2" step="0.1" value="1"></div>
+    <details class="performance settings">
+      <summary>Performance controls</summary>
+      <label><span>Fog</span><input id="perf-fog" type="checkbox" checked></label>
+      <label><span>Shadows</span><input id="perf-shadows" type="checkbox" checked></label>
+      <label><span>Particles</span><input id="perf-particles" type="checkbox" checked></label>
+      <label><span>Smoke particles</span><input id="perf-smoke" type="checkbox" checked></label>
+      <label><span>Flash lights</span><input id="perf-lights" type="checkbox" checked></label>
+      <label><span>Red trails / post layer</span><input id="perf-trails" type="checkbox" checked></label>
+      <label><span>High DPI (up to 2×)</span><input id="perf-hidpi" type="checkbox"></label>
+      <p class="perf-hint">Toggle one feature, then wait a few seconds to compare FPS. High DPI uses up to 4× as many pixels.</p>
+      <output id="perf-stats">Measuring…</output>
+    </details>
+    <button id="fire" class="primary">HOLD TO FIRE <kbd>SPACE</kbd></button>
+    <button id="generate" class="secondary">Generate range <kbd>G</kbd></button>
+    <p class="hint">Select a target to aim. Hold Space to fire the selected weapon.</p>
+  </aside>
+  <div class="readout"><span class="eyebrow">BALLISTICS TELEMETRY</span><div><span><b id="shots">0000</b><small>ROUNDS FIRED</small></span><span><b id="hits">0000</b><small>TARGET HITS</small></span><span><b id="active">00</b><small>IN FLIGHT</small></span><span><b id="fps">—</b><small>FPS</small></span></div></div>
+  <footer><span><i></i><span id="status">AUTO FIRING · BOTH MG VARIANTS + ROCKET</span></span><span>DRAG <b>Orbit</b> &nbsp; SCROLL <b>Zoom</b> &nbsp; RIGHT DRAG <b>Pan</b> &nbsp; R <b>Reset view</b></span></footer>
+  <div id="error" role="alert" hidden></div>
+  <script type="module" src="./js/rangeMain.js"></script>
+</body>
+</html>

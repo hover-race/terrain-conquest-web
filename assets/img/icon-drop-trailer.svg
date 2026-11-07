@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- trailer box -->
+  <rect x="22" y="18" width="28" height="20" rx="2" stroke="#eee" stroke-width="3"/>
+  <!-- tongue -->
+  <path d="M22 28 H10" stroke="#eee" stroke-width="3" stroke-linecap="round"/>
+  <!-- hitch ring open / dropped -->
+  <circle cx="8" cy="28" r="5" stroke="#f66" stroke-width="3"/>
+  <path d="M5 24 L11 32" stroke="#f66" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- wheels -->
+  <circle cx="30" cy="42" r="5" stroke="#eee" stroke-width="3"/>
+  <circle cx="44" cy="42" r="5" stroke="#eee" stroke-width="3"/>
+</svg>

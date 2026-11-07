@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Missions 1–3 · Terrain Conquest</title>
+    <link rel="stylesheet" href="./css/examples.css?ver=1.0.0" />
+    <link rel="stylesheet" href="./p1/style.css" />
+    <link rel="stylesheet" href="./p1/css/dispatch.css" />
+    <link rel="stylesheet" href="./p1/css/conquest.css" />
+  </head>
+
+  <body class="conquest-mode" data-mode="mission">
+    <div id="conquest-banner" hidden></div>
+
+    <aside id="conquest-hud">
+      <div class="cq-row">
+        <strong id="cq-mission-title">M1 · CAPTURE THE FLAG</strong>
+        <span class="cq-spacer"></span>
+        <span id="cq-sector-summary"></span>
+      </div>
+      <div class="cq-bar">
+        <div class="cq-bar-red" id="cq-bar-red"></div>
+        <div class="cq-bar-blue" id="cq-bar-blue"></div>
+      </div>
+
+      <div class="cq-row">
+        <span>HP</span>
+        <div class="cq-bar cq-hp"><div id="cq-truck-hp-fill"></div></div>
+      </div>
+
+      <div id="cq-objective-status"></div>
+      <div class="cq-bar" id="cq-capture-bar" hidden><div id="cq-capture-fill"></div></div>
+
+      <div class="cq-row">
+        <span id="cq-trailer-badge"></span>
+        <span class="cq-spacer"></span>
+        <button type="button" class="cq-btn" id="cq-missions-btn">Missions</button>
+        <button type="button" class="cq-btn" id="cq-reset-island-btn">Reset</button>
+      </div>
+    </aside>
+
+    <div id="cq-controls-hint">
+      WASD drive · Space brake · Click/F fire · T unhook · R respawn · C cam · Tab map · ` version
+    </div>
+
+    <div id="minimap-container"></div>
+    <div id="reticle">
+      <img src="./assets/img/reticle.png" alt="Crosshair" />
+    </div>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "enable3d": "./lib/enable3d/enable3d.framework.0.26.0_dev0.module.min.js",
+          "three": "https://unpkg.com/three@0.177.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.177.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module">
+      import { THREE } from 'enable3d'
+      window.THREE = THREE
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+    <script type="module" src="./p1/js/missionMain.js"></script>
+    <script type="module" src="./p1/js/rangeLauncher.js"></script>
+  </body>
+</html>

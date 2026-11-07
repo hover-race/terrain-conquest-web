@@ -1,0 +1,207 @@
+:root {
+  --team-red: #ff5252;
+  --team-blue: #4da6ff;
+  --team-neutral: #ffc65c;
+  --text-muted: #9aa4b2;
+}
+
+body.conquest-mode {
+  margin: 0;
+  overflow: hidden;
+  background: #0d1117;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #f3f5f8;
+  user-select: none;
+}
+
+body.dispatch-active #conquest-hud,
+body.dispatch-active #game-hud,
+body.dispatch-active #cq-controls-hint,
+body.dispatch-active .dropoff-pointer {
+  visibility: hidden;
+}
+
+#conquest-hud {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  width: 260px;
+  z-index: 10040;
+  padding: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(16, 20, 24, 0.8);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.cq-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cq-spacer {
+  flex: 1;
+}
+
+.cq-muted {
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+#cq-net-status {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.cq-team-btn,
+.cq-btn {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: inherit;
+  font: 600 11px system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.cq-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.cq-team-btn[data-team="red"].active {
+  background: var(--team-red);
+  border-color: var(--team-red);
+}
+
+.cq-team-btn[data-team="blue"].active {
+  background: var(--team-blue);
+  border-color: var(--team-blue);
+}
+
+.cq-bar {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+#cq-objective-status:empty,
+.cq-bar[hidden] {
+  display: none;
+}
+
+.cq-hp {
+  flex: 1;
+}
+
+.cq-bar > div {
+  height: 100%;
+}
+
+.cq-bar-red { background: var(--team-red); }
+.cq-bar-neutral { background: var(--team-neutral); }
+.cq-bar-blue { background: var(--team-blue); }
+#cq-capture-fill { background: var(--team-neutral); width: 0; }
+
+#cq-controls-hint {
+  position: fixed;
+  bottom: 10px;
+  left: 12px;
+  z-index: 10040;
+  color: var(--text-muted);
+  font-size: 11px;
+  pointer-events: none;
+}
+
+#conquest-banner {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10055;
+  padding: 8px 16px;
+  border-radius: 6px;
+  background: rgba(16, 20, 24, 0.85);
+  color: #fff5d6;
+  font: 700 13px system-ui, sans-serif;
+  pointer-events: none;
+}
+
+#mission-victory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 15000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 10, 6, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+#mission-victory-overlay[hidden] {
+  display: none;
+}
+
+.victory-card {
+  min-width: 340px;
+  max-width: 520px;
+  padding: 26px 30px;
+  border: 2px solid #85e8a5;
+  border-radius: 10px;
+  background: rgba(10, 22, 14, 0.95);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+  text-align: center;
+  color: #eaffea;
+}
+
+.victory-title {
+  font: 800 22px system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  color: #85e8a5;
+  margin-bottom: 8px;
+}
+
+.victory-subtitle {
+  font: 600 14px system-ui, sans-serif;
+  color: #cfe8d5;
+  margin-bottom: 22px;
+}
+
+.victory-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.victory-btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: 700 13px system-ui, sans-serif;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.victory-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.victory-btn.primary {
+  border-color: #85e8a5;
+  background: #1f5c34;
+  color: #eaffea;
+}
+
+.victory-btn.primary:hover {
+  background: #2b7a46;
+}
