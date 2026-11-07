@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
     <title>Terrain Conquest · Admin Telemetry &amp; Island Control</title>
     <style>
       :root {
@@ -81,22 +82,6 @@
         background: rgba(111, 220, 94, 0.1);
       }
 
-      .auth-bar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .user-pill {
-        font-size: 12px;
-        color: var(--text);
-        background: var(--panel-alt);
-        border: 1px solid var(--border);
-        padding: 6px 10px;
-        border-radius: 4px;
-      }
-
       .btn {
         cursor: pointer;
         font-family: inherit;
@@ -139,54 +124,6 @@
         background: #1b3146;
         border-color: var(--blue);
         color: #fff;
-      }
-
-      .setup-alert {
-        background: #1b170e;
-        border: 1px solid var(--gold);
-        border-radius: 6px;
-        padding: 14px 18px;
-        margin-bottom: 18px;
-      }
-
-      .setup-alert h2 {
-        margin: 0 0 8px;
-        font-size: 14px;
-        color: var(--gold);
-      }
-
-      .setup-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin: 10px 0;
-      }
-
-      .setup-links a {
-        display: inline-block;
-        padding: 6px 11px;
-        background: #272112;
-        border: 1px solid var(--gold);
-        border-radius: 4px;
-        color: var(--gold);
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .rules-box {
-        position: relative;
-        margin-top: 10px;
-      }
-
-      .rules-box pre {
-        margin: 0;
-        padding: 12px;
-        background: #090d11;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-size: 11px;
-        color: #b7d1e8;
-        overflow-x: auto;
       }
 
       .kpi-row {
@@ -419,76 +356,12 @@
       <div class="brand">
         <h1>TERRAIN CONQUEST · ADMIN TELEMETRY</h1>
         <span class="badge live" id="firestore-status-badge">CONNECTING TO BOXRACING-17CBF…</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
         <a href="./mission.html" class="badge">Missions 1–3 ↗</a>
         <a href="./conquest.html" class="badge">Island 1 ↗</a>
       </div>
-
-      <div class="auth-bar">
-        <span class="user-pill" id="auth-user-pill">Not signed in</span>
-        <button type="button" class="btn primary" id="google-signin-btn">Sign in with Google</button>
-        <button type="button" class="btn" id="google-signout-btn" hidden>Sign Out</button>
-        <button type="button" class="btn" id="toggle-setup-btn">Auth &amp; Rules Setup</button>
-      </div>
     </header>
-
-    <section class="setup-alert" id="firebase-setup-panel" hidden>
-      <h2 id="setup-alert-title">Firebase Authentication &amp; Firestore Rules Setup (`boxracing-17cbf`)</h2>
-      <div id="setup-alert-message" style="font-size: 12px; color: #e5d5b5;">
-        Use the 1-click links below to enable Google Sign-In, authorize <code>hover-race.github.io</code>, or paste Firestore security rules in the Firebase Console:
-      </div>
-      <div class="setup-links">
-        <a
-          href="https://console.firebase.google.com/project/boxracing-17cbf/authentication/providers"
-          target="_blank"
-          rel="noopener"
-        >
-          1. Enable Google Sign-In Provider ↗
-        </a>
-        <a
-          href="https://console.firebase.google.com/project/boxracing-17cbf/authentication/settings"
-          target="_blank"
-          rel="noopener"
-        >
-          2. Add Authorized Domain (hover-race.github.io) ↗
-        </a>
-        <a
-          href="https://console.firebase.google.com/project/boxracing-17cbf/firestore/rules"
-          target="_blank"
-          rel="noopener"
-        >
-          3. Open Firestore Rules Editor ↗
-        </a>
-        <button type="button" class="btn" id="copy-rules-btn">Copy firestore.rules</button>
-      </div>
-      <div class="rules-box">
-        <pre id="firestore-rules-code">rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function isSignedInAdmin() {
-      return request.auth != null &amp;&amp; request.auth.token.email_verified == true;
-    }
-
-    match /conquest_analytics/{docId} {
-      allow read: if true;
-      allow create, update: if true;
-      allow delete: if isSignedInAdmin();
-    }
-
-    match /conquest_islands/{islandId} {
-      allow read, create, update: if true;
-      allow delete: if isSignedInAdmin();
-    }
-
-    match /conquest_servers/{serverId} {
-      allow read, create, update, delete: if true;
-      match /signaling_messages/{msgId} {
-        allow read, create, update, delete: if true;
-      }
-    }
-  }
-}</pre>
-      </div>
-    </section>
 
     <section class="kpi-row">
       <div class="kpi-card">
@@ -633,7 +506,6 @@ service cloud.firestore {
     </section>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
     <script type="module">
@@ -654,7 +526,6 @@ service cloud.firestore {
         window.firebase.initializeApp(FIREBASE_CONFIG)
       }
 
-      const auth = window.firebase.auth()
       const db = window.firebase.firestore()
 
       const $ = id => document.getElementById(id)
@@ -665,70 +536,6 @@ service cloud.firestore {
       const sessionDocs = []
       const islandDocs = new Map()
       let selectedIslandId = 'maui_main'
-
-      function showSetupPanel(title, message) {
-        const panel = $('firebase-setup-panel')
-        panel.hidden = false
-        if (title) $('setup-alert-title').textContent = title
-        if (message) $('setup-alert-message').innerHTML = message
-      }
-
-      $('toggle-setup-btn').addEventListener('click', () => {
-        const panel = $('firebase-setup-panel')
-        panel.hidden = !panel.hidden
-      })
-
-      $('copy-rules-btn').addEventListener('click', () => {
-        const rulesText = $('firestore-rules-code').textContent
-        navigator.clipboard?.writeText(rulesText)
-        $('copy-rules-btn').textContent = 'Copied firestore.rules!'
-        setTimeout(() => {
-          $('copy-rules-btn').textContent = 'Copy firestore.rules'
-        }, 2000)
-      })
-
-      auth.onAuthStateChanged(user => {
-        const pill = $('auth-user-pill')
-        const inBtn = $('google-signin-btn')
-        const outBtn = $('google-signout-btn')
-        if (user) {
-          pill.textContent = `${user.email || 'Signed In'} (${user.uid.slice(0, 8)}…)`
-          inBtn.hidden = true
-          outBtn.hidden = false
-        } else {
-          pill.textContent = 'Not signed in (Public Read Mode)'
-          inBtn.hidden = false
-          outBtn.hidden = true
-        }
-      })
-
-      $('google-signin-btn').addEventListener('click', () => {
-        const provider = new window.firebase.auth.GoogleAuthProvider()
-        auth.signInWithPopup(provider).catch(err => {
-          const code = err?.code || 'auth/error'
-          if (
-            code === 'auth/operation-not-allowed' ||
-            code === 'auth/configuration-not-found' ||
-            String(err?.message || '').includes('CONFIGURATION_NOT_FOUND')
-          ) {
-            showSetupPanel(
-              `Google Sign-In Not Yet Enabled (${code})`,
-              `Google Sign-In is not toggled on yet in Firebase project <code>boxracing-17cbf</code>. Click <strong>1. Enable Google Sign-In Provider ↗</strong> below, click <em>Get Started</em> → <em>Google</em> → <em>Enable</em> → <em>Save</em>.`
-            )
-          } else if (code === 'auth/unauthorized-domain') {
-            showSetupPanel(
-              `Domain Not Yet Authorized (${window.location.hostname})`,
-              `Add <code>${window.location.hostname}</code> (and <code>hover-race.github.io</code>) under <strong>2. Add Authorized Domain ↗</strong> in the Firebase Console.`
-            )
-          } else {
-            showSetupPanel(`Sign-In Notice (${code})`, `${err?.message || code}`)
-          }
-        })
-      })
-
-      $('google-signout-btn').addEventListener('click', () => {
-        auth.signOut()
-      })
 
       function getActiveStatsDoc() {
         if (activeScope === 'totals') return totalsDoc || {}
