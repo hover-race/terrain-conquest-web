@@ -12,6 +12,7 @@ export const MISSION_DEFS = [
   {
     id: 1,
     code: 'M1',
+    favicon: '🚩',
     title: 'MISSION 1: CAPTURE THE FLAG',
     shortTitle: 'M1 · CAPTURE THE FLAG',
     payoutTag: 'STAGE 01',
@@ -30,6 +31,7 @@ export const MISSION_DEFS = [
   {
     id: 2,
     code: 'M2',
+    favicon: '🔫',
     title: 'MISSION 2: TURRET ASSAULT',
     shortTitle: 'M2 · TURRET ASSAULT',
     payoutTag: 'STAGE 02',
@@ -48,6 +50,7 @@ export const MISSION_DEFS = [
   {
     id: 3,
     code: 'M3',
+    favicon: '🧨',
     title: 'MISSION 3: AMMO DELIVERY',
     shortTitle: 'M3 · AMMO DELIVERY',
     payoutTag: 'STAGE 03',
@@ -69,6 +72,17 @@ export const MISSION_DEFS = [
 
 export function getMissionDef(missionId) {
   return MISSION_DEFS.find(m => m.id === Number(missionId)) || MISSION_DEFS[0]
+}
+
+export function setEmojiFavicon(emoji) {
+  if (!emoji || typeof document === 'undefined') return
+  let link = document.querySelector('link[rel="icon"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.rel = 'icon'
+    document.head.appendChild(link)
+  }
+  link.href = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${emoji}</text></svg>`
 }
 
 function easeInOutCubic(t) {
@@ -198,6 +212,7 @@ export class MissionStartScene {
       this.selectedMission = def.id
       this.onSelectMission?.(this.selectedMission)
     }
+    setEmojiFavicon(def.favicon)
     this.updateSelectionUI()
     this.renderMap(false)
   }
