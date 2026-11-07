@@ -405,12 +405,18 @@ export class SectorTower {
           this.fireCooldown = 0.42
           this.turretHead.updateMatrixWorld(true)
           this.muzzle.getWorldPosition(this.muzzleWorld)
-          this.aimDir
-            .subVectors(
-              new THREE.Vector3(targetPos.x, targetPos.y + 1.1, targetPos.z),
-              this.muzzleWorld
-            )
-            .normalize()
+          const dx = targetPos.x - this.muzzleWorld.x
+          const dy = targetPos.y + 1.1 - this.muzzleWorld.y
+          const dz = targetPos.z - this.muzzleWorld.z
+          const horizDist = Math.hypot(dx, dz)
+          const speed = 52
+          const gravity = 9.8
+          const flightTime = Math.max(0.18, horizDist / speed)
+          this.aimDir.set(
+            dx / flightTime,
+            (dy + 0.5 * gravity * flightTime * flightTime) / flightTime,
+            dz / flightTime
+          )
           this.scene.fireBallistic('machineGunRed', this.muzzleWorld, this.aimDir, this.ownerTeam, false)
         }
       }
@@ -644,6 +650,7 @@ export class FriendlyHeavyCannon {
     }
 
     this.refreshVisuals()
+    this.scene.onAmmoDelivered?.()
     this.scene.showBanner?.('AMMO LOADED — SHELLING TARGET!')
     this.scene.renderHud?.()
   }
@@ -664,8 +671,8 @@ export class FriendlyHeavyCannon {
     const dy = targetPoint.y - this.muzzleWorld.y
     const dz = targetPoint.z - this.muzzleWorld.z
     const horizDist = Math.hypot(dx, dz)
-    const speed = 62
-    const gravity = 9.5
+    const speed = 56
+    const gravity = 14.0
     const flightTime = Math.max(0.25, horizDist / speed)
 
     this.aimDir.set(
@@ -949,8 +956,8 @@ export class SiegeTrailer {
       const dz = targetPoint.z - this.muzzleWorld.z
       const dy = targetPoint.y - this.muzzleWorld.y
       const horizDist = Math.hypot(dx, dz)
-      const gravity = this.type === 'artillery' ? 9.5 : 1.2
-      const speed = this.type === 'artillery' ? 62 : 105
+      const gravity = this.type === 'artillery' ? 14.0 : 12.0
+      const speed = this.type === 'artillery' ? 56 : 68
       const flightTime = Math.max(0.25, horizDist / speed)
       const vx = dx / flightTime
       const vz = dz / flightTime
@@ -1210,9 +1217,18 @@ export class AiRaiderTruck {
       if (this.fireCooldown <= 0) {
         this.fireCooldown = 0.55
         this.muzzleWorld.set(this.position.x, this.position.y + 2.6, this.position.z)
-        this.aimDir
-          .subVectors(new THREE.Vector3(playerPos.x, playerPos.y + 1.1, playerPos.z), this.muzzleWorld)
-          .normalize()
+        const dx = playerPos.x - this.muzzleWorld.x
+        const dy = playerPos.y + 1.1 - this.muzzleWorld.y
+        const dz = playerPos.z - this.muzzleWorld.z
+        const horizDist = Math.hypot(dx, dz)
+        const speed = 52
+        const gravity = 9.8
+        const flightTime = Math.max(0.18, horizDist / speed)
+        this.aimDir.set(
+          dx / flightTime,
+          (dy + 0.5 * gravity * flightTime * flightTime) / flightTime,
+          dz / flightTime
+        )
         this.scene.fireBallistic('machineGunRed', this.muzzleWorld, this.aimDir, this.team, false)
       }
     }

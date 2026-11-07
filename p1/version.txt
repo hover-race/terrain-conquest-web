@@ -1,1 +1,1 @@
-missions 1-3: M1 capture flag, M2 truck gun vs turret, M3 tow ammo trailer to friendly turret
+gunner view & ballistics: smooth camera transitions, side-mounted gunner cam with barrel recoil, clamped gun elevation, parabolic shots, M3 -> Island 1 multiplayer link

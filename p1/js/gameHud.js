@@ -20,7 +20,6 @@ export function createGameHud({ onDropTrailer, onSwitchCamera, hitchCoupler, get
 
   document.body.appendChild(root)
 
-  // Keep mouse interaction out of gameplay and retain focus for driving keys.
   root.addEventListener('mousedown', event => {
     event.preventDefault()
     event.stopPropagation()
@@ -31,7 +30,6 @@ export function createGameHud({ onDropTrailer, onSwitchCamera, hitchCoupler, get
     event.stopPropagation()
     if (event.detail > 0) event.target.closest('button')?.blur()
   })
-  // Let release events reach document so an existing shot/drag always ends.
 
   root.querySelector('#hud-drop-trailer').addEventListener('click', () => onDropTrailer?.())
   root.querySelector('#hud-camera').addEventListener('click', () => onSwitchCamera?.())
@@ -52,7 +50,6 @@ export function createGameHud({ onDropTrailer, onSwitchCamera, hitchCoupler, get
       dropButton.title = `${description} — Drop trailer (T)`
       dropButton.setAttribute('aria-label', `${description}. Drop trailer`)
     }
-    // Attraction changes only the button; connection messages keep their 4-second lifetime.
     if (wasCoupled === coupled) return
     wasCoupled = coupled
     label.textContent = coupled ? 'Trailer connected' : 'Trailer disconnected'

@@ -74,6 +74,11 @@ class CameraSmoothFollow {
     activate() {
       if (this.isActive) return;
       this.isActive = true;
+      if (this.camera) {
+        this.camera.up.set(0, 1, 0);
+        this.camera.fov = 75;
+        this.camera.updateProjectionMatrix();
+      }
       this.reset(this.camera, this.target); // Reset state when activating
       // Apply initial position/rotation based on reset state
       if (this.target) {
@@ -161,6 +166,7 @@ class CameraSmoothFollow {
       }
 
       // Update camera
+      this.camera.up.set(0, 1, 0);
       this.camera.position.copy(newPosition);
 
       // Look at target

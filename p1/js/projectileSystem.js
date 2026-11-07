@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 
 export const WEAPONS = Object.freeze({
-  machineGun: { speed: 115, interval: 0.085, gravity: 0.65, lifetime: 3, radius: 0.035 },
-  machineGunRed: { speed: 55, interval: 0.16, gravity: 0.65, lifetime: 3, radius: 0.035 },
-  rocket: { speed: 24, interval: 1.9, gravity: 0, lifetime: 6, radius: 0.16 },
+  machineGun: { speed: 78, interval: 0.085, gravity: 9.8, lifetime: 3.5, radius: 0.06 },
+  machineGunRed: { speed: 52, interval: 0.16, gravity: 9.8, lifetime: 3.5, radius: 0.07 },
+  rocket: { speed: 44, interval: 1.9, gravity: 9.8, lifetime: 6, radius: 0.18 },
 })
 
 // Simulation is independent of rendering. Sweep every movement segment so fast

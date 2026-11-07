@@ -248,15 +248,22 @@ const direction = new THREE.Vector3()
 function shoot(weapon) {
   const candidates = targets.filter(t => t.type === weapon.type)
   const target = candidates[weapon.targetIndex % candidates.length]
-  weapon.pivot.lookAt(target.mesh.position)
+  const cfg = WEAPONS[weapon.type]
+  weapon.pivot.updateMatrixWorld(true)
+  weapon.muzzle.getWorldPosition(muzzle)
+  const dist = muzzle.distanceTo(target.mesh.position)
+  const flightTime = dist / cfg.speed
+  const compensatedTarget = target.mesh.position.clone()
+  compensatedTarget.y += 0.5 * cfg.gravity * flightTime * flightTime
+  weapon.pivot.lookAt(compensatedTarget)
   // Weapon models point along -Z; Object3D.lookAt points +Z toward the target.
   weapon.pivot.rotateY(Math.PI)
   weapon.pivot.updateMatrixWorld(true)
   weapon.muzzle.getWorldPosition(muzzle)
-  direction.subVectors(target.mesh.position, muzzle).normalize()
+  direction.subVectors(compensatedTarget, muzzle).normalize()
   if (weapon.type !== 'rocket') {
-    direction.x += (Math.random() - 0.5) * 0.012
-    direction.y += (Math.random() - 0.5) * 0.012
+    direction.x += (Math.random() - 0.5) * 0.008
+    direction.y += (Math.random() - 0.5) * 0.008
   }
   const p = system.fire(weapon.type, muzzle, direction)
   if (p) {

@@ -17,33 +17,34 @@ import {
   AiRaiderTruck,
 } from './conquestEntities.js'
 import { ConquestNet, RemoteTruck } from './conquestNet.js'
+import { initAnalytics, trackEvent } from './analytics.js'
 
 const CONQUEST_WEAPONS = {
   machineGun: {
-    speed: 105,
-    gravity: 1.2,
-    lifetime: 2.4,
-    radius: 0.3,
-    damage: 14,
-    splashRadius: 2.5,
+    speed: 68,
+    gravity: 12.0,
+    lifetime: 3.5,
+    radius: 0.55,
+    damage: 20,
+    splashRadius: 2.8,
     color: 0xffde95,
     isRocket: false,
   },
   machineGunRed: {
-    speed: 58,
-    gravity: 1.0,
-    lifetime: 2.6,
-    radius: 0.35,
+    speed: 52,
+    gravity: 9.8,
+    lifetime: 3.2,
+    radius: 0.38,
     damage: 5,
     splashRadius: 0,
     color: 0xff3b3b,
     isRocket: false,
   },
   artillery: {
-    speed: 62,
-    gravity: 9.5,
-    lifetime: 5.5,
-    radius: 0.6,
+    speed: 56,
+    gravity: 14.0,
+    lifetime: 6.0,
+    radius: 0.9,
     damage: 36,
     splashRadius: 10.5,
     color: 0xffae42,
@@ -116,6 +117,8 @@ class ConquestScene extends Scene3D {
     if (urlTeam === 'red' || urlTeam === 'blue') {
       this.playerTeam = urlTeam
     }
+    initAnalytics('conquest')
+    trackEvent('island1_join', { team: this.playerTeam })
 
     const { lights } = await this.warpSpeed('light')
     this.createLargerSky()
@@ -163,7 +166,7 @@ class ConquestScene extends Scene3D {
 
     this.cameraManager = new CameraManager(this, this.car, this.camera)
     // Start in Follow Camera (index 1) for intuitive driving + towing
-    this.cameraManager.switchCameraMode()
+    this.cameraManager.switchCameraMode({ instant: true })
 
     this.gameHud = createGameHud({
       getHitchCoupler: () => this.hitchCoupler,
@@ -346,6 +349,11 @@ class ConquestScene extends Scene3D {
   }
 
   onTowerCaptured(tower) {
+    trackEvent('island1_tower_captured', {
+      towerId: tower.id,
+      towerName: tower.name,
+      team: tower.ownerTeam,
+    })
     this.updateVoronoiColors()
     this.showBanner(
       `SECTOR CAPTURED! ${tower.name.toUpperCase()} IS NOW ${tower.ownerTeam.toUpperCase()} TERRITORY`
@@ -414,11 +422,13 @@ class ConquestScene extends Scene3D {
     // 1. Fire truck roof gun in the direction of the turret
     if (this.roofGunCooldown <= 0 && this.car?.bulletOrigin) {
       this.roofGunCooldown = 0.22
-      const origin = new THREE.Vector3()
-      const dir = new THREE.Vector3()
-      this.car.bulletOrigin.getWorldPosition(origin)
-      this.car.bulletOrigin.getWorldDirection(dir)
-      this.fireBallistic('machineGun', origin, dir, this.playerTeam, true)
+      const origin = this.car.getMuzzleWorldPosition(new THREE.Vector3())
+      this.car.turret.triggerBarrelRecoil()
+      const dir = this.car.turret.getBarrelWorldDirection(new THREE.Vector3())
+      const velocity = dir.clone().multiplyScalar(CONQUEST_WEAPONS.machineGun.speed)
+      playExplosionSound()
+      trackEvent('shots_fired')
+      this.fireBallistic('machineGun', origin, velocity, this.playerTeam, true)
     }
 
     // 2. Also trigger any deployed friendly Artillery Trailer to fire a siege round
@@ -660,8 +670,9 @@ class ConquestScene extends Scene3D {
   }
 
   async setupNetworking(params) {
-    const islandId = params.get('island') || 'maui_main'
+    const islandId = params.get('island') || 'island-1'
     this.net = new ConquestNet(this, { islandId })
+    this.showBanner('ISLAND 1 · PERSISTENT MULTIPLAYER CONQUEST — CAPTURE ALL 8 SECTORS!', 5.0)
 
     this.net.on('island-state', state => {
       this.applyIslandState(state)

@@ -17,7 +17,7 @@ export class Bullet {
     glowLight; // Add property for the glow light
     ttlTimeout;
 
-    constructor(mainScene, originObject, shootSpeed = 200) {
+    constructor(mainScene, originObject, shootSpeed = 75) {
         this.mainScene = mainScene;
         const bulletRadius = 0.2;
         const bulletMass = 1;

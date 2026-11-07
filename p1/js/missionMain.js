@@ -19,33 +19,34 @@ import {
   SiegeTrailer,
 } from './conquestEntities.js'
 import { MissionStartScene, getMissionDef } from './missionStartScene.js'
+import { initAnalytics, trackEvent, trackMissionWin } from './analytics.js'
 
 const MISSION_WEAPONS = {
   machineGun: {
-    speed: 140,
-    gravity: 0,
-    lifetime: 2.5,
+    speed: 68,
+    gravity: 12.0,
+    lifetime: 3.5,
     radius: 0.9,
     damage: 25,
-    splashRadius: 2.8,
+    splashRadius: 3.0,
     color: 0xffde95,
     isRocket: false,
   },
   machineGunRed: {
-    speed: 58,
-    gravity: 1.0,
-    lifetime: 2.6,
-    radius: 0.35,
+    speed: 52,
+    gravity: 9.8,
+    lifetime: 3.2,
+    radius: 0.38,
     damage: 5,
     splashRadius: 0,
     color: 0xff3b3b,
     isRocket: false,
   },
   artillery: {
-    speed: 62,
-    gravity: 9.5,
-    lifetime: 5.5,
-    radius: 0.9,
+    speed: 56,
+    gravity: 14.0,
+    lifetime: 6.0,
+    radius: 0.95,
     damage: 34,
     splashRadius: 11.5,
     color: 0xffae42,
@@ -128,6 +129,7 @@ class MissionScene extends Scene3D {
     window.pubsub = new EventTarget()
     window.missionScene = this
     this.currentMission = parseMissionFromUrl()
+    initAnalytics('mission')
 
     const { lights } = await this.warpSpeed('light')
     this.createLargerSky()
@@ -364,7 +366,7 @@ class MissionScene extends Scene3D {
         this.startMenu = null
         if (!this.cameraManager) {
           this.cameraManager = new CameraManager(this, this.car, this.camera)
-          this.cameraManager.switchCameraMode()
+          this.cameraManager.switchCameraMode({ instant: true })
         } else {
           const activeCtrl = this.cameraManager.controllers[this.cameraManager.currentIndex]
           activeCtrl?.activate?.()
@@ -442,6 +444,32 @@ class MissionScene extends Scene3D {
   aimTurretAtMouse() {
     if (!this.car?.turretTraverseAxis || !this.camera) return false
 
+    const isGunnerView = this.cameraManager?.isGunCameraActive()
+    if (isGunnerView) {
+      const origin = this.car.getMuzzleWorldPosition(new THREE.Vector3())
+      const barrelDir = this.car.turret.getBarrelWorldDirection(new THREE.Vector3())
+      this.aimRaycaster.set(origin, barrelDir)
+
+      let aimedAtTower = false
+      if (this.targetTower && this.targetTower.hasTurret && this.targetTower.turretHp > 0) {
+        const towerCenter = new THREE.Vector3(
+          this.targetTower.position.x,
+          this.targetTower.position.y + 2.6,
+          this.targetTower.position.z
+        )
+        const toTower = towerCenter.clone().sub(origin)
+        if (toTower.dot(barrelDir) > 0 && this.aimRaycaster.ray.distanceToPoint(towerCenter) <= 12.0) {
+          this.aimPoint.copy(towerCenter)
+          aimedAtTower = true
+        }
+      }
+
+      if (!aimedAtTower) {
+        this.aimRaycaster.ray.at(85, this.aimPoint)
+      }
+      return aimedAtTower
+    }
+
     this.camera.updateMatrixWorld(true)
     this.aimRaycaster.setFromCamera(this.mouseCoords, this.camera)
 
@@ -455,7 +483,7 @@ class MissionScene extends Scene3D {
       const towerNdc = towerCenter.clone().project(this.camera)
       const ndcDist = Math.hypot(this.mouseCoords.x - towerNdc.x, this.mouseCoords.y - towerNdc.y)
       const rayDist = this.aimRaycaster.ray.distanceToPoint(towerCenter)
-      if ((towerNdc.z < 1 && ndcDist <= 0.68) || rayDist <= 10.0) {
+      if ((towerNdc.z < 1 && ndcDist <= 0.36) || rayDist <= 9.0) {
         this.aimPoint.copy(towerCenter)
         aimedAtTower = true
       }
@@ -467,14 +495,21 @@ class MissionScene extends Scene3D {
         this.aimPoint.copy(hits[0].point)
         this.aimPoint.y += 0.5
       } else {
-        this.aimRaycaster.ray.at(140, this.aimPoint)
+        this.aimRaycaster.ray.at(95, this.aimPoint)
       }
     } else if (!aimedAtTower) {
-      this.aimRaycaster.ray.at(140, this.aimPoint)
+      this.aimRaycaster.ray.at(95, this.aimPoint)
     }
 
-    this.car.turretTraverseAxis.lookAt(this.aimPoint)
-    this.car.turretTraverseAxis.updateMatrixWorld(true)
+    const muzzlePos = this.car.getMuzzleWorldPosition(new THREE.Vector3())
+    const horizDist = Math.hypot(this.aimPoint.x - muzzlePos.x, this.aimPoint.z - muzzlePos.z)
+    const cfg = MISSION_WEAPONS.machineGun
+    const flightTime = Math.max(0.15, horizDist / cfg.speed)
+    const ballisticTarget = this.aimPoint.clone()
+    ballisticTarget.y += 0.5 * cfg.gravity * flightTime * flightTime
+
+    this.car.turret.aimAtWorldPoint(ballisticTarget, false)
+    this.car.turret.applyAnglesAndRecoil(0.016)
     return aimedAtTower
   }
 
@@ -496,6 +531,11 @@ class MissionScene extends Scene3D {
 
     this.victoryEl.querySelector('#victory-next-btn').addEventListener('click', () => {
       const def = getMissionDef(this.currentMission)
+      if (def.nextMissionUrl) {
+        const targetHref = new URL('p1/conquest.html?island=island-1', new URL('../../', import.meta.url)).href
+        window.location.assign(targetHref)
+        return
+      }
       this.openStartMenu(def.nextMissionId)
     })
 
@@ -508,7 +548,10 @@ class MissionScene extends Scene3D {
     if (!this.victoryEl) return
     const def = getMissionDef(this.currentMission)
     this.victoryEl.querySelector('#victory-title').textContent = `${def.title} — COMPLETE!`
-    this.victoryEl.querySelector('#victory-subtitle').textContent = `Sector captured in ${this.missionElapsedSec.toFixed(1)}s`
+    this.victoryEl.querySelector('#victory-subtitle').textContent =
+      def.id === 3
+        ? `Sector captured in ${this.missionElapsedSec.toFixed(1)}s · Training complete! Ready to deploy to Island 1 (Persistent Multiplayer Conquest).`
+        : `Sector captured in ${this.missionElapsedSec.toFixed(1)}s`
     this.victoryEl.querySelector('#victory-next-btn').textContent = `[ ${def.nextButtonLabel} ]`
     this.victoryEl.hidden = false
   }
@@ -643,6 +686,7 @@ class MissionScene extends Scene3D {
 
   onTrailerStateChanged(siegeTrailer, newState) {
     if (newState === 'hitched') {
+      trackEvent('m3_hitch')
       this.showBanner('AMMO TRAILER HITCHED! TOW INTO THE FRIENDLY CANNON GOLD RING')
     } else if (this.friendlyCannon && !this.friendlyCannon.ammoLoaded) {
       const dist = Math.round(
@@ -662,8 +706,16 @@ class MissionScene extends Scene3D {
     this.renderHud()
   }
 
+  onAmmoDelivered() {
+    trackEvent('m3_ammo_delivered')
+  }
+
   onTowerCaptured(tower) {
     this.missionComplete = true
+    trackMissionWin(this.currentMission, {
+      elapsedSec: Number(this.missionElapsedSec.toFixed(1)),
+      shotsFired: this.shotsFired,
+    })
     this.updateVoronoiColors()
     this.showBanner(
       `MISSION ${this.currentMission} ACCOMPLISHED! ${tower.name.toUpperCase()} CONQUERED IN ${this.missionElapsedSec.toFixed(1)}S`,
@@ -726,16 +778,32 @@ class MissionScene extends Scene3D {
     if (this.roofGunCooldown <= 0 && this.car?.bulletOrigin) {
       this.roofGunCooldown = 0.22
       const aimedAtTower = this.aimTurretAtMouse()
-      const origin = new THREE.Vector3()
-      this.car.bulletOrigin.getWorldPosition(origin)
-      const dir = this.aimPoint.clone().sub(origin)
-      if (dir.lengthSq() < 0.001) {
-        this.car.bulletOrigin.getWorldDirection(dir)
+      const origin = this.car.getMuzzleWorldPosition(new THREE.Vector3())
+      this.car.turret.triggerBarrelRecoil()
+
+      const cfg = MISSION_WEAPONS.machineGun
+      const isGunnerView = this.cameraManager?.isGunCameraActive()
+      const velocity = new THREE.Vector3()
+
+      if (isGunnerView && !aimedAtTower) {
+        const barrelDir = this.car.turret.getBarrelWorldDirection(new THREE.Vector3())
+        velocity.copy(barrelDir).multiplyScalar(cfg.speed)
       } else {
-        dir.normalize()
+        const dx = this.aimPoint.x - origin.x
+        const dy = this.aimPoint.y - origin.y
+        const dz = this.aimPoint.z - origin.z
+        const horizDist = Math.hypot(dx, dz)
+        const flightTime = Math.max(0.15, horizDist / cfg.speed)
+        velocity.set(
+          dx / flightTime,
+          (dy + 0.5 * cfg.gravity * flightTime * flightTime) / flightTime,
+          dz / flightTime
+        )
       }
+
       playExplosionSound()
-      this.fireBallistic('machineGun', origin, dir, this.playerTeam, aimedAtTower)
+      trackEvent('shots_fired')
+      this.fireBallistic('machineGun', origin, velocity, this.playerTeam, aimedAtTower)
     }
   }
 

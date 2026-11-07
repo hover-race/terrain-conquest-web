@@ -61,6 +61,9 @@ export class RTSCamera {
     this.isDragging = false;
 
     // Set initial position immediately
+    this.camera.up.set(0, 1, 0);
+    this.camera.fov = 75;
+    this.camera.updateProjectionMatrix();
     this.updateDesiredPosition();
     this.camera.position.copy(this.desiredPosition);
     this.camera.lookAt(this.target.getWorldPosition(new THREE.Vector3()));
@@ -186,6 +189,7 @@ export class RTSCamera {
     this.updateDesiredPosition();
 
     // Smoothly interpolate camera position
+    this.camera.up.set(0, 1, 0);
     this.camera.position.lerp(this.desiredPosition, this.lerpFactor);
 
     // Always look at the target's current position

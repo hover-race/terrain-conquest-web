@@ -212,7 +212,7 @@ export class SignalingManager {
 }
 
 export class ConquestNet {
-  constructor(scene, { islandId = 'maui_main' } = {}) {
+  constructor(scene, { islandId = 'island-1' } = {}) {
     this.scene = scene
     this.islandId = islandId
     this.sessionId = `p_${Math.random().toString(36).slice(2, 9)}`

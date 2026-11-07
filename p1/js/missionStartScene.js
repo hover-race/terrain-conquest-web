@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { trackMissionStart } from './analytics.js'
 
 const TRANSITION_MS = 1400
 const MAP_FRUSTUM = 150
@@ -50,7 +51,8 @@ export const MISSION_DEFS = [
     title: 'MISSION 3: AMMO DELIVERY',
     shortTitle: 'M3 · AMMO DELIVERY',
     payoutTag: 'STAGE 03',
-    nextButtonLabel: 'NEXT MISSION: M1 CAPTURE THE FLAG ↗',
+    nextButtonLabel: 'JOIN ISLAND 1 — MULTIPLAYER CONQUEST ↗',
+    nextMissionUrl: 'conquest.html?island=island-1',
     nextMissionId: 1,
     description:
       'Hitch the Ammo Trailer at Spawn and tow it to the Friendly Heavy Turret on the ridge so it can shell and destroy the enemy bunker, then capture the flag.',
@@ -482,6 +484,7 @@ export class MissionStartScene {
 
   confirm() {
     this.isTransitioning = true
+    trackMissionStart(this.selectedMission)
     this.root.classList.add('transitioning')
     this.root.appendChild(this.mapCanvas)
     this.root.appendChild(this.mapOverlay)

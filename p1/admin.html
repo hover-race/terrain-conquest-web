@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terrain Conquest · Admin Telemetry &amp; Island Control</title>
+    <style>
+      :root {
+        --bg: #080d11;
+        --panel: #0f171e;
+        --panel-alt: #131e27;
+        --border: #223442;
+        --accent: #6fdc5e;
+        --blue: #4da6ff;
+        --red: #ff5252;
+        --gold: #ffc65c;
+        --text: #e6eef5;
+        --muted: #8aa0b4;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 20px 24px 48px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        line-height: 1.45;
+      }
+
+      a {
+        color: var(--blue);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .top-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 14px 18px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        margin-bottom: 18px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 16px;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 11px;
+        border-radius: 4px;
+        background: #172634;
+        border: 1px solid var(--border);
+        color: var(--muted);
+      }
+
+      .badge.live {
+        color: var(--accent);
+        border-color: #2f6b29;
+        background: rgba(111, 220, 94, 0.1);
+      }
+
+      .auth-bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-pill {
+        font-size: 12px;
+        color: var(--text);
+        background: var(--panel-alt);
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        border-radius: 4px;
+      }
+
+      .btn {
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 7px 13px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: var(--panel-alt);
+        color: var(--text);
+        transition: background 0.15s, border-color 0.15s;
+      }
+
+      .btn:hover {
+        background: #1c2c38;
+        border-color: var(--blue);
+      }
+
+      .btn.primary {
+        background: #193822;
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .btn.primary:hover {
+        background: #224b2e;
+      }
+
+      .btn.danger {
+        background: #331619;
+        border-color: var(--red);
+        color: #ff8a8a;
+      }
+
+      .btn.danger:hover {
+        background: #481d22;
+      }
+
+      .btn.active {
+        background: #1b3146;
+        border-color: var(--blue);
+        color: #fff;
+      }
+
+      .setup-alert {
+        background: #1b170e;
+        border: 1px solid var(--gold);
+        border-radius: 6px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+      }
+
+      .setup-alert h2 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: var(--gold);
+      }
+
+      .setup-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 10px 0;
+      }
+
+      .setup-links a {
+        display: inline-block;
+        padding: 6px 11px;
+        background: #272112;
+        border: 1px solid var(--gold);
+        border-radius: 4px;
+        color: var(--gold);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .rules-box {
+        position: relative;
+        margin-top: 10px;
+      }
+
+      .rules-box pre {
+        margin: 0;
+        padding: 12px;
+        background: #090d11;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        font-size: 11px;
+        color: #b7d1e8;
+        overflow-x: auto;
+      }
+
+      .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .kpi-card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px 14px;
+      }
+
+      .kpi-label {
+        font-size: 11px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .kpi-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin-top: 4px;
+        color: var(--text);
+      }
+
+      .kpi-sub {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1.55fr 1fr;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      @media (max-width: 980px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 16px 18px;
+      }
+
+      .card-header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-header h2 {
+        margin: 0;
+        font-size: 14px;
+        letter-spacing: 0.05em;
+        color: var(--text);
+      }
+
+      .funnel-list {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+      }
+
+      .funnel-row {
+        display: grid;
+        grid-template-columns: 165px 1fr 76px 115px;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+      }
+
+      @media (max-width: 640px) {
+        .funnel-row {
+          grid-template-columns: 120px 1fr 56px 80px;
+        }
+      }
+
+      .funnel-label {
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .funnel-track {
+        height: 18px;
+        background: #091017;
+        border: 1px solid var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .funnel-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #2d7940, var(--accent));
+        transition: width 0.25s ease;
+      }
+
+      .funnel-count {
+        text-align: right;
+        font-weight: 700;
+      }
+
+      .funnel-pct {
+        text-align: right;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .split-bar {
+        display: flex;
+        height: 20px;
+        border-radius: 4px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        margin: 8px 0 12px;
+      }
+
+      .split-desktop {
+        background: var(--blue);
+      }
+
+      .split-mobile {
+        background: var(--gold);
+      }
+
+      .list-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+
+      .list-table th,
+      .list-table td {
+        padding: 7px 8px;
+        border-bottom: 1px solid #182631;
+        text-align: left;
+      }
+
+      .list-table th {
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+      }
+
+      .tower-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .tower-card {
+        background: var(--panel-alt);
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+
+      .tower-card.red {
+        border-left: 4px solid var(--red);
+      }
+      .tower-card.blue {
+        border-left: 4px solid var(--blue);
+      }
+      .tower-card.neutral {
+        border-left: 4px solid var(--gold);
+      }
+
+      .tower-top {
+        display: flex;
+        justify-content: space-between;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .hp-mini {
+        height: 8px;
+        background: #0a1015;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+
+      .hp-mini-fill {
+        height: 100%;
+        background: var(--accent);
+      }
+
+      .step-chip {
+        display: inline-block;
+        padding: 2px 6px;
+        margin: 1px 2px;
+        border-radius: 3px;
+        background: #172a3a;
+        color: #9ed0ff;
+        font-size: 10px;
+      }
+
+      select.date-select {
+        background: var(--panel-alt);
+        color: var(--text);
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-family: inherit;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top-bar">
+      <div class="brand">
+        <h1>TERRAIN CONQUEST · ADMIN TELEMETRY</h1>
+        <span class="badge live" id="firestore-status-badge">CONNECTING TO BOXRACING-17CBF…</span>
+        <a href="./mission.html" class="badge">Missions 1–3 ↗</a>
+        <a href="./conquest.html" class="badge">Island 1 ↗</a>
+      </div>
+
+      <div class="auth-bar">
+        <span class="user-pill" id="auth-user-pill">Not signed in</span>
+        <button type="button" class="btn primary" id="google-signin-btn">Sign in with Google</button>
+        <button type="button" class="btn" id="google-signout-btn" hidden>Sign Out</button>
+        <button type="button" class="btn" id="toggle-setup-btn">Auth &amp; Rules Setup</button>
+      </div>
+    </header>
+
+    <section class="setup-alert" id="firebase-setup-panel" hidden>
+      <h2 id="setup-alert-title">Firebase Authentication &amp; Firestore Rules Setup (`boxracing-17cbf`)</h2>
+      <div id="setup-alert-message" style="font-size: 12px; color: #e5d5b5;">
+        Use the 1-click links below to enable Google Sign-In, authorize <code>hover-race.github.io</code>, or paste Firestore security rules in the Firebase Console:
+      </div>
+      <div class="setup-links">
+        <a
+          href="https://console.firebase.google.com/project/boxracing-17cbf/authentication/providers"
+          target="_blank"
+          rel="noopener"
+        >
+          1. Enable Google Sign-In Provider ↗
+        </a>
+        <a
+          href="https://console.firebase.google.com/project/boxracing-17cbf/authentication/settings"
+          target="_blank"
+          rel="noopener"
+        >
+          2. Add Authorized Domain (hover-race.github.io) ↗
+        </a>
+        <a
+          href="https://console.firebase.google.com/project/boxracing-17cbf/firestore/rules"
+          target="_blank"
+          rel="noopener"
+        >
+          3. Open Firestore Rules Editor ↗
+        </a>
+        <button type="button" class="btn" id="copy-rules-btn">Copy firestore.rules</button>
+      </div>
+      <div class="rules-box">
+        <pre id="firestore-rules-code">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedInAdmin() {
+      return request.auth != null &amp;&amp; request.auth.token.email_verified == true;
+    }
+
+    match /conquest_analytics/{docId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if isSignedInAdmin();
+    }
+
+    match /conquest_islands/{islandId} {
+      allow read, create, update: if true;
+      allow delete: if isSignedInAdmin();
+    }
+
+    match /conquest_servers/{serverId} {
+      allow read, create, update, delete: if true;
+      match /signaling_messages/{msgId} {
+        allow read, create, update, delete: if true;
+      }
+    }
+  }
+}</pre>
+      </div>
+    </section>
+
+    <section class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-label">Page Loads</div>
+        <div class="kpi-value" id="kpi-page-load">0</div>
+        <div class="kpi-sub" id="kpi-scope-label">All-Time Totals</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">M1 → M3 Win Rate</div>
+        <div class="kpi-value" id="kpi-m3-conv">0%</div>
+        <div class="kpi-sub" id="kpi-m3-sub">0 M3 wins / 0 M1 starts</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Island 1 Joins</div>
+        <div class="kpi-value" id="kpi-island-join">0</div>
+        <div class="kpi-sub" id="kpi-tower-cap">0 towers captured</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Total Shots Fired</div>
+        <div class="kpi-value" id="kpi-shots-fired">0</div>
+        <div class="kpi-sub">Player roof gun + siege rounds</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Active Multiplayer Rooms</div>
+        <div class="kpi-value" id="kpi-active-rooms">0</div>
+        <div class="kpi-sub" id="kpi-island-summary">3 RED · 2 NEU · 3 BLUE</div>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-header">
+          <h2>CONVERSION FUNNEL (MISSIONS 1–3 → ISLAND 1)</h2>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" class="btn active" id="scope-totals-btn">All-Time Totals</button>
+            <select class="date-select" id="scope-daily-select" aria-label="Select daily breakdown">
+              <option value="">Daily Breakdown…</option>
+            </select>
+            <button type="button" class="btn danger" id="reset-analytics-btn">Reset Analytics Totals</button>
+          </div>
+        </div>
+        <div class="funnel-list" id="funnel-chart"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>TRAFFIC &amp; REFERRERS</h2>
+          <span class="badge" id="traffic-updated-at">Waiting for data…</span>
+        </div>
+
+        <div style="font-size: 12px; display: flex; justify-content: space-between;">
+          <span id="device-desktop-label">Desktop: 0 (0%)</span>
+          <span id="device-mobile-label">Mobile: 0 (0%)</span>
+        </div>
+        <div class="split-bar">
+          <div class="split-desktop" id="bar-desktop" style="width: 50%"></div>
+          <div class="split-mobile" id="bar-mobile" style="width: 50%"></div>
+        </div>
+
+        <h3 style="font-size: 12px; color: var(--muted); margin: 16px 0 8px;">TOP REFERRERS</h3>
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th>Referrer Host</th>
+              <th style="text-align: right;">Sessions</th>
+              <th style="text-align: right;">Share</th>
+            </tr>
+          </thead>
+          <tbody id="referrer-tbody">
+            <tr>
+              <td colspan="3" style="color: var(--muted);">No referrer data yet</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-header">
+          <h2>LIVE ISLAND 1 STATE (<code>conquest_islands</code>)</h2>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <select class="date-select" id="island-doc-select" aria-label="Select island document">
+              <option value="maui_main">conquest_islands/maui_main</option>
+              <option value="island-1">conquest_islands/island-1</option>
+            </select>
+            <button type="button" class="btn danger" id="reset-island-btn">Reset Island 1 State</button>
+          </div>
+        </div>
+        <div id="island-meta" style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">
+          Listening for live sector tower updates…
+        </div>
+        <div class="tower-grid" id="island-towers-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2>ACTIVE CONQUEST SERVERS (<code>conquest_servers</code>)</h2>
+          <span class="badge" id="servers-count-badge">0 rooms</span>
+        </div>
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th>Room ID</th>
+              <th>Status</th>
+              <th>Last Heartbeat</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="servers-tbody">
+            <tr>
+              <td colspan="4" style="color: var(--muted);">No active rooms in conquest_servers</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>RECENT PLAYER SESSIONS (LIVE STREAM)</h2>
+        <span class="badge" id="sessions-count-badge">0 sessions</span>
+      </div>
+      <table class="list-table">
+        <thead>
+          <tr>
+            <th>Session ID</th>
+            <th>Device</th>
+            <th>Referrer</th>
+            <th>Latest Milestone</th>
+            <th>Funnel Steps Reached</th>
+            <th style="text-align: right;">Shots</th>
+            <th style="text-align: right;">Updated</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-tbody">
+          <tr>
+            <td colspan="7" style="color: var(--muted);">No sessions recorded yet</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <script type="module">
+      import { FIREBASE_CONFIG, FUNNEL_STEPS, getTodayDateString } from './js/analytics.js'
+
+      const SECTOR_NAMES = [
+        'North Ridge',
+        'Crater Pass',
+        'West Bay',
+        'Summit Watch',
+        'Canyon Gate',
+        'South Harbor',
+        'East Bluff',
+        'Lava Point',
+      ]
+
+      if (!window.firebase.apps.length) {
+        window.firebase.initializeApp(FIREBASE_CONFIG)
+      }
+
+      const auth = window.firebase.auth()
+      const db = window.firebase.firestore()
+
+      const $ = id => document.getElementById(id)
+
+      let activeScope = 'totals'
+      let totalsDoc = {}
+      const dailyDocs = new Map()
+      const sessionDocs = []
+      const islandDocs = new Map()
+      let selectedIslandId = 'maui_main'
+
+      function showSetupPanel(title, message) {
+        const panel = $('firebase-setup-panel')
+        panel.hidden = false
+        if (title) $('setup-alert-title').textContent = title
+        if (message) $('setup-alert-message').innerHTML = message
+      }
+
+      $('toggle-setup-btn').addEventListener('click', () => {
+        const panel = $('firebase-setup-panel')
+        panel.hidden = !panel.hidden
+      })
+
+      $('copy-rules-btn').addEventListener('click', () => {
+        const rulesText = $('firestore-rules-code').textContent
+        navigator.clipboard?.writeText(rulesText)
+        $('copy-rules-btn').textContent = 'Copied firestore.rules!'
+        setTimeout(() => {
+          $('copy-rules-btn').textContent = 'Copy firestore.rules'
+        }, 2000)
+      })
+
+      auth.onAuthStateChanged(user => {
+        const pill = $('auth-user-pill')
+        const inBtn = $('google-signin-btn')
+        const outBtn = $('google-signout-btn')
+        if (user) {
+          pill.textContent = `${user.email || 'Signed In'} (${user.uid.slice(0, 8)}…)`
+          inBtn.hidden = true
+          outBtn.hidden = false
+        } else {
+          pill.textContent = 'Not signed in (Public Read Mode)'
+          inBtn.hidden = false
+          outBtn.hidden = true
+        }
+      })
+
+      $('google-signin-btn').addEventListener('click', () => {
+        const provider = new window.firebase.auth.GoogleAuthProvider()
+        auth.signInWithPopup(provider).catch(err => {
+          const code = err?.code || 'auth/error'
+          if (
+            code === 'auth/operation-not-allowed' ||
+            code === 'auth/configuration-not-found' ||
+            String(err?.message || '').includes('CONFIGURATION_NOT_FOUND')
+          ) {
+            showSetupPanel(
+              `Google Sign-In Not Yet Enabled (${code})`,
+              `Google Sign-In is not toggled on yet in Firebase project <code>boxracing-17cbf</code>. Click <strong>1. Enable Google Sign-In Provider ↗</strong> below, click <em>Get Started</em> → <em>Google</em> → <em>Enable</em> → <em>Save</em>.`
+            )
+          } else if (code === 'auth/unauthorized-domain') {
+            showSetupPanel(
+              `Domain Not Yet Authorized (${window.location.hostname})`,
+              `Add <code>${window.location.hostname}</code> (and <code>hover-race.github.io</code>) under <strong>2. Add Authorized Domain ↗</strong> in the Firebase Console.`
+            )
+          } else {
+            showSetupPanel(`Sign-In Notice (${code})`, `${err?.message || code}`)
+          }
+        })
+      })
+
+      $('google-signout-btn').addEventListener('click', () => {
+        auth.signOut()
+      })
+
+      function getActiveStatsDoc() {
+        if (activeScope === 'totals') return totalsDoc || {}
+        return dailyDocs.get(activeScope) || {}
+      }
+
+      function renderFunnelAndTraffic() {
+        const data = getActiveStatsDoc()
+        const pageLoads = Number(data.page_load || 0)
+        const m1Starts = Number(data.m1_start || 0)
+        const m3Wins = Number(data.m3_win || 0)
+        const islandJoins = Number(data.island1_join || 0)
+        const towerCaps = Number(data.island1_tower_captured || 0)
+        const shotsFired = Number(data.shots_fired || 0)
+
+        $('kpi-page-load').textContent = pageLoads.toLocaleString()
+        $('kpi-scope-label').textContent =
+          activeScope === 'totals' ? 'All-Time Totals' : `Daily (${activeScope.replace('daily_', '')})`
+
+        const m3Rate = m1Starts > 0 ? Math.round((m3Wins / m1Starts) * 100) : 0
+        $('kpi-m3-conv').textContent = `${m3Rate}%`
+        $('kpi-m3-sub').textContent = `${m3Wins} M3 wins / ${m1Starts} M1 starts`
+
+        $('kpi-island-join').textContent = islandJoins.toLocaleString()
+        $('kpi-tower-cap').textContent = `${towerCaps.toLocaleString()} towers captured`
+        $('kpi-shots-fired').textContent = shotsFired.toLocaleString()
+
+        if (data.updated_at) {
+          $('traffic-updated-at').textContent = `Updated ${new Date(data.updated_at).toLocaleTimeString()}`
+        }
+
+        const baseCount = Math.max(1, pageLoads, m1Starts)
+        let prevCount = pageLoads
+
+        const funnelHtml = FUNNEL_STEPS.map((step, idx) => {
+          const count = Number(data[step.key] || 0)
+          const pctOfLoad = pageLoads > 0 ? Math.round((count / pageLoads) * 100) : 0
+          const stepConv =
+            idx === 0
+              ? '100% entry'
+              : prevCount > 0
+              ? `${Math.min(100, Math.round((count / prevCount) * 100))}% of prev`
+              : '—'
+          prevCount = count > 0 ? count : prevCount
+          const barWidth = Math.min(100, Math.round((count / baseCount) * 100))
+
+          return `
+            <div class="funnel-row" data-funnel-key="${step.key}">
+              <div class="funnel-label">${step.label}</div>
+              <div class="funnel-track">
+                <div class="funnel-fill" style="width: ${barWidth}%"></div>
+              </div>
+              <div class="funnel-count">${count.toLocaleString()}</div>
+              <div class="funnel-pct">${pctOfLoad}% (${stepConv})</div>
+            </div>
+          `
+        }).join('')
+
+        $('funnel-chart').innerHTML = funnelHtml
+
+        const devices = data.devices || {}
+        const desktopCount = Number(devices.desktop ?? data.device_desktop ?? 0)
+        const mobileCount = Number(devices.mobile ?? data.device_mobile ?? 0)
+        const totalDev = desktopCount + mobileCount
+        const desktopPct = totalDev > 0 ? Math.round((desktopCount / totalDev) * 100) : 50
+        const mobilePct = totalDev > 0 ? 100 - desktopPct : 50
+
+        $('device-desktop-label').textContent = `Desktop: ${desktopCount} (${totalDev > 0 ? desktopPct : 0}%)`
+        $('device-mobile-label').textContent = `Mobile: ${mobileCount} (${totalDev > 0 ? mobilePct : 0}%)`
+        $('bar-desktop').style.width = `${desktopPct}%`
+        $('bar-mobile').style.width = `${mobilePct}%`
+
+        const referrers = data.referrers || {}
+        const refEntries = Object.entries(referrers)
+          .map(([host, cnt]) => ({ host, count: Number(cnt || 0) }))
+          .filter(r => r.count > 0)
+          .sort((a, b) => b.count - a.count)
+
+        const totalRefs = refEntries.reduce((acc, r) => acc + r.count, 0)
+        if (refEntries.length === 0) {
+          $('referrer-tbody').innerHTML =
+            '<tr><td colspan="3" style="color: var(--muted);">No referrer data yet</td></tr>'
+        } else {
+          $('referrer-tbody').innerHTML = refEntries
+            .map(r => {
+              const share = totalRefs > 0 ? Math.round((r.count / totalRefs) * 100) : 0
+              return `
+                <tr>
+                  <td><code>${r.host}</code></td>
+                  <td style="text-align: right; font-weight: 700;">${r.count.toLocaleString()}</td>
+                  <td style="text-align: right; color: var(--muted);">${share}%</td>
+                </tr>
+              `
+            })
+            .join('')
+        }
+      }
+
+      function renderSessions() {
+        const sorted = [...sessionDocs].sort((a, b) => (b.updated_at || 0) - (a.updated_at || 0)).slice(0, 20)
+        $('sessions-count-badge').textContent = `${sessionDocs.length} sessions`
+        if (sorted.length === 0) {
+          $('sessions-tbody').innerHTML =
+            '<tr><td colspan="7" style="color: var(--muted);">No sessions recorded yet</td></tr>'
+          return
+        }
+
+        $('sessions-tbody').innerHTML = sorted
+          .map(s => {
+            const events = Array.isArray(s.events) ? s.events : []
+            const chips = events.map(ev => `<span class="step-chip">${ev}</span>`).join('')
+            const shots = Number(s.counts?.shots_fired || 0)
+            const timeStr = s.updated_at ? new Date(s.updated_at).toLocaleTimeString() : '—'
+            return `
+              <tr>
+                <td><code>${s.sessionId || s.id}</code></td>
+                <td>${s.device || 'desktop'}</td>
+                <td><code>${s.referrer || 'direct'}</code></td>
+                <td style="color: var(--accent); font-weight: 600;">${s.last_event || 'page_load'}</td>
+                <td>${chips}</td>
+                <td style="text-align: right;">${shots}</td>
+                <td style="text-align: right; color: var(--muted);">${timeStr}</td>
+              </tr>
+            `
+          })
+          .join('')
+      }
+
+      function renderIslandState() {
+        const docData = islandDocs.get(selectedIslandId) || islandDocs.get('maui_main')
+        const grid = $('island-towers-grid')
+        const meta = $('island-meta')
+
+        const defaultTowers = SECTOR_NAMES.map((name, idx) => ({
+          id: `stop-${idx + 1}`,
+          name,
+          ownerTeam: idx < 3 ? 'red' : idx >= 5 ? 'blue' : 'neutral',
+          turretHp: 100,
+        }))
+
+        const rawTowers = Array.isArray(docData?.towers) && docData.towers.length > 0 ? docData.towers : defaultTowers
+        const towers = rawTowers.map((t, idx) => ({
+          id: t.id || `stop-${idx + 1}`,
+          name: SECTOR_NAMES[idx] || t.id || `Sector ${idx + 1}`,
+          ownerTeam: t.ownerTeam || 'neutral',
+          turretHp: typeof t.turretHp === 'number' ? t.turretHp : 100,
+        }))
+
+        const redCount = towers.filter(t => t.ownerTeam === 'red').length
+        const blueCount = towers.filter(t => t.ownerTeam === 'blue').length
+        const neuCount = towers.length - redCount - blueCount
+
+        $('kpi-island-summary').textContent = `${redCount} RED · ${neuCount} NEU · ${blueCount} BLUE`
+
+        const trailerCount = Array.isArray(docData?.trailers) ? docData.trailers.length : 4
+        const updatedText = docData?.updated_at
+          ? `Last synced ${new Date(docData.updated_at).toLocaleTimeString()}`
+          : 'Default front line'
+        meta.textContent = `Doc: conquest_islands/${selectedIslandId} · ${redCount} Red / ${neuCount} Neutral / ${blueCount} Blue · ${trailerCount} Siege Trailers · ${updatedText}`
+
+        grid.innerHTML = towers
+          .map(t => {
+            const hp = Math.max(0, Math.min(100, Math.round(t.turretHp)))
+            return `
+              <div class="tower-card ${t.ownerTeam}">
+                <div class="tower-top">
+                  <span>${t.name}</span>
+                  <span style="text-transform: uppercase;">${t.ownerTeam}</span>
+                </div>
+                <div style="font-size: 11px; color: var(--muted);">
+                  Sector <code>${t.id}</code> · Turret HP: ${hp}%
+                </div>
+                <div class="hp-mini">
+                  <div class="hp-mini-fill" style="width: ${hp}%"></div>
+                </div>
+              </div>
+            `
+          })
+          .join('')
+      }
+
+      db.collection('conquest_analytics').onSnapshot(snapshot => {
+        $('firestore-status-badge').textContent = 'LIVE · BOXRACING-17CBF'
+        sessionDocs.length = 0
+
+        snapshot.forEach(doc => {
+          const d = doc.data()
+          if (doc.id === 'totals') {
+            totalsDoc = d
+          } else if (doc.id.startsWith('daily_')) {
+            dailyDocs.set(doc.id, d)
+          } else if (doc.id.startsWith('session_') || d.type === 'session') {
+            sessionDocs.push({ id: doc.id, ...d })
+          }
+        })
+
+        const select = $('scope-daily-select')
+        const currentVal = select.value
+        const sortedDays = [...dailyDocs.keys()].sort().reverse()
+        select.innerHTML =
+          '<option value="">Daily Breakdown…</option>' +
+          sortedDays.map(k => `<option value="${k}">${k.replace('daily_', '')}</option>`).join('')
+        if (currentVal && dailyDocs.has(currentVal)) {
+          select.value = currentVal
+        }
+
+        renderFunnelAndTraffic()
+        renderSessions()
+      })
+
+      db.collection('conquest_islands').onSnapshot(snapshot => {
+        snapshot.forEach(doc => {
+          islandDocs.set(doc.id, doc.data())
+        })
+        renderIslandState()
+      })
+
+      db.collection('conquest_servers').onSnapshot(snapshot => {
+        const now = Date.now()
+        const rooms = []
+        snapshot.forEach(doc => {
+          const d = doc.data()
+          const updatedDate = d.updated_at?.toDate?.()
+          const ageSec = updatedDate ? Math.round((now - updatedDate.getTime()) / 1000) : null
+          rooms.push({
+            id: doc.id,
+            canJoin: !!d.can_join,
+            ageSec,
+          })
+        })
+
+        const activeRooms = rooms.filter(r => r.ageSec === null || r.ageSec < 120)
+        $('kpi-active-rooms').textContent = String(activeRooms.length)
+        $('servers-count-badge').textContent = `${rooms.length} rooms`
+
+        if (rooms.length === 0) {
+          $('servers-tbody').innerHTML =
+            '<tr><td colspan="4" style="color: var(--muted);">No active rooms in conquest_servers</td></tr>'
+          return
+        }
+
+        $('servers-tbody').innerHTML = rooms
+          .map(r => {
+            const fresh = r.ageSec !== null && r.ageSec < 60
+            const ageLabel = r.ageSec !== null ? `${r.ageSec}s ago` : 'just now'
+            return `
+              <tr>
+                <td><code>${r.id}</code></td>
+                <td style="color: ${fresh ? 'var(--accent)' : 'var(--gold)'};">
+                  ${fresh ? '● Live Host' : '○ Stale'}
+                </td>
+                <td>${ageLabel}</td>
+                <td style="text-align: right;">
+                  <a href="./conquest.html?gameId=${encodeURIComponent(r.id)}">Join Room ↗</a>
+                </td>
+              </tr>
+            `
+          })
+          .join('')
+      })
+
+      $('scope-totals-btn').addEventListener('click', () => {
+        activeScope = 'totals'
+        $('scope-totals-btn').classList.add('active')
+        $('scope-daily-select').value = ''
+        renderFunnelAndTraffic()
+      })
+
+      $('scope-daily-select').addEventListener('change', e => {
+        if (!e.target.value) {
+          activeScope = 'totals'
+          $('scope-totals-btn').classList.add('active')
+        } else {
+          activeScope = e.target.value
+          $('scope-totals-btn').classList.remove('active')
+        }
+        renderFunnelAndTraffic()
+      })
+
+      $('island-doc-select').addEventListener('change', e => {
+        selectedIslandId = e.target.value
+        renderIslandState()
+      })
+
+      $('reset-island-btn').addEventListener('click', async () => {
+        const defaultTowers = SECTOR_NAMES.map((_, idx) => ({
+          id: `stop-${idx + 1}`,
+          ownerTeam: idx < 3 ? 'red' : idx >= 5 ? 'blue' : 'neutral',
+          turretHp: 100,
+        }))
+        const payload = {
+          towers: defaultTowers,
+          updated_at: Date.now(),
+        }
+        await Promise.all([
+          db.collection('conquest_islands').doc('maui_main').set(payload, { merge: true }),
+          db.collection('conquest_islands').doc('island-1').set(payload, { merge: true }),
+        ])
+      })
+
+      $('reset-analytics-btn').addEventListener('click', async () => {
+        const zeroPatch = {
+          updated_at: Date.now(),
+          shots_fired: 0,
+          device_desktop: 0,
+          device_mobile: 0,
+          devices: { desktop: 0, mobile: 0 },
+          referrers: {},
+        }
+        for (const step of FUNNEL_STEPS) {
+          zeroPatch[step.key] = 0
+        }
+        const today = getTodayDateString()
+        await Promise.all([
+          db.collection('conquest_analytics').doc('totals').set({ type: 'totals', ...zeroPatch }),
+          db
+            .collection('conquest_analytics')
+            .doc(`daily_${today}`)
+            .set({ type: 'daily', date: today, ...zeroPatch }),
+        ])
+      })
+    </script>
+  </body>
+</html>
