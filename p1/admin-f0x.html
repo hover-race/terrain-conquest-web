@@ -489,7 +489,8 @@
       <table class="list-table">
         <thead>
           <tr>
-            <th>Session ID</th>
+            <th>Session</th>
+            <th>Session Name</th>
             <th>Device</th>
             <th>Referrer</th>
             <th>Latest Milestone</th>
@@ -500,7 +501,7 @@
         </thead>
         <tbody id="sessions-tbody">
           <tr>
-            <td colspan="7" style="color: var(--muted);">No sessions recorded yet</td>
+            <td colspan="8" style="color: var(--muted);">No sessions recorded yet</td>
           </tr>
         </tbody>
       </table>
@@ -640,7 +641,7 @@
         $('sessions-count-badge').textContent = `${sessionDocs.length} sessions`
         if (sorted.length === 0) {
           $('sessions-tbody').innerHTML =
-            '<tr><td colspan="7" style="color: var(--muted);">No sessions recorded yet</td></tr>'
+            '<tr><td colspan="8" style="color: var(--muted);">No sessions recorded yet</td></tr>'
           return
         }
 
@@ -650,9 +651,11 @@
             const chips = events.map(ev => `<span class="step-chip">${ev}</span>`).join('')
             const shots = Number(s.counts?.shots_fired || 0)
             const timeStr = s.updated_at ? new Date(s.updated_at).toLocaleTimeString() : '—'
+            const sName = s.sessionName || '—'
             return `
               <tr>
                 <td><code>${s.sessionId || s.id}</code></td>
+                <td style="color: var(--gold); font-weight: 600;">${sName}</td>
                 <td>${s.device || 'desktop'}</td>
                 <td><code>${s.referrer || 'direct'}</code></td>
                 <td style="color: var(--accent); font-weight: 600;">${s.last_event || 'page_load'}</td>

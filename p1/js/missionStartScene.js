@@ -1,5 +1,11 @@
 import * as THREE from 'three'
-import { trackMissionStart } from './analytics.js'
+import {
+  trackMissionStart,
+  getSessionName,
+  setSessionName,
+  getCompletedMissions,
+} from './analytics.js'
+import { assetPath } from './util.js'
 
 const TRANSITION_MS = 1400
 const MAP_FRUSTUM = 150
@@ -7,6 +13,24 @@ const MAP_FRUSTUM_END = 6
 const MAP_RES = 160
 const TRUCK_RES = 96
 const TRUCK_ROTATION_SPEED = 0.004
+
+export const CONQUEST_WORLD_DEF = {
+  id: 'conquest',
+  code: 'ISLAND 1',
+  favicon: '🏝️',
+  title: 'MAIN WORLD: ISLAND 1 SIEGE',
+  shortTitle: 'ISLAND 1 · PERSISTENT WORLD',
+  payoutTag: 'LIVE MULTIPLAYER',
+  url: 'p1/conquest.html?island=island-1',
+  description:
+    'Join the persistent multiplayer Island 1 campaign on Maui. Battle alongside and against live players + AI raiders to capture all 8 Voronoi territory sectors.',
+  steps: [
+    '1. CHOOSE RED OR BLUE FACTION ON ISLAND 1',
+    '2. HITCH & DEPLOY SIEGE ARTILLERY TO BREAK TOWER SHIELDS',
+    '3. CAPTURE ALL 8 VORONOI SECTORS IN PERSISTENT WORLD STATE',
+  ],
+  mapLabel: 'ISLAND 1 · PERSISTENT MULTIPLAYER WORLD',
+}
 
 export const MISSION_DEFS = [
   {
@@ -135,32 +159,89 @@ export class MissionStartScene {
     this.terminal = document.createElement('div')
     this.terminal.className = 'dispatch-terminal'
 
-    const missionRowsHtml = MISSION_DEFS.map(
-      m => `
-        <li class="dispatch-load mission-option" data-mission="${m.id}">
+    const completedSet = getCompletedMissions()
+    const completedCount = completedSet.size
+    const allTrainingDone = completedCount === MISSION_DEFS.length
+    const trainingBadgeClass = allTrainingDone ? 'flow-badge completed' : 'flow-badge'
+    const trainingBadgeText = allTrainingDone
+      ? '✓ TRAINING COMPLETED (3/3)'
+      : `PROGRESS: ${completedCount}/${MISSION_DEFS.length} COMPLETED`
+
+    const currentSessionName = getSessionName()
+    const mainWorldHref = assetPath('/p1/conquest.html?island=island-1')
+
+    const missionRowsHtml = MISSION_DEFS.map(m => {
+      const isDone = completedSet.has(m.id)
+      const statusHtml = isDone
+        ? `<span class="mission-done-badge">✓ COMPLETED</span>`
+        : `<span class="payout">${m.payoutTag}</span>`
+      return `
+        <li class="dispatch-load mission-option ${isDone ? 'is-completed' : ''}" data-mission="${m.id}">
           <span class="marker"></span>
           <span class="name">${m.title}</span>
-          <span class="payout">${m.payoutTag}</span>
+          ${statusHtml}
         </li>
       `
-    ).join('')
+    }).join('')
 
     this.terminal.innerHTML = `
       <div class="dispatch-panel">
         <div class="dispatch-text">
-          <div class="dispatch-header">SIEGE COMMAND · SELECT MISSION</div>
+          <div class="dispatch-top-row">
+            <div class="dispatch-header">SIEGE COMMAND · WELCOME</div>
+            <label class="dispatch-name-field" for="dispatch-session-name">
+              <span class="dispatch-name-label">CALLSIGN / SESSION NAME:</span>
+              <input
+                type="text"
+                id="dispatch-session-name"
+                class="dispatch-name-input"
+                maxlength="24"
+                placeholder="ENTER CALLSIGN…"
+                autocomplete="off"
+                spellcheck="false"
+              />
+            </label>
+          </div>
+
+          <div class="dispatch-flow-block">
+            <div class="dispatch-flow-header">
+              <span class="dispatch-flow-title">FLOW 1 · TRAINING SESSIONS</span>
+              <span class="${trainingBadgeClass}" id="dispatch-training-badge">${trainingBadgeText}</span>
+            </div>
+            <ul class="dispatch-loads" id="dispatch-mission-list">
+              ${missionRowsHtml}
+            </ul>
+          </div>
+
+          <div class="dispatch-flow-block main-world-block">
+            <div class="dispatch-flow-header">
+              <span class="dispatch-flow-title">FLOW 2 · PERSISTENT MULTIPLAYER WORLD</span>
+              <span class="flow-badge live">● LIVE SERVER</span>
+            </div>
+            <div class="dispatch-world-row">
+              <div class="dispatch-load world-option" data-mission="conquest" id="dispatch-world-option">
+                <span class="marker"></span>
+                <span class="name">${CONQUEST_WORLD_DEF.title}</span>
+                <span class="payout">${CONQUEST_WORLD_DEF.payoutTag}</span>
+              </div>
+              <a href="${mainWorldHref}" class="dispatch-world-jump-link" id="dispatch-world-jump-link">
+                JUMP TO PERSISTENT MULTIPLAYER SESSION ↗
+              </a>
+            </div>
+          </div>
+
           <div class="dispatch-subheader" id="dispatch-mission-subheader"></div>
-          <ul class="dispatch-loads" id="dispatch-mission-list">
-            ${missionRowsHtml}
-          </ul>
           <div class="dispatch-description" id="dispatch-mission-desc"></div>
           <div class="dispatch-route" id="dispatch-mission-steps"></div>
           <div class="dispatch-deploy-row">
             <button type="button" class="dispatch-deploy-btn" data-action="start" id="dispatch-deploy-btn">
               &gt; DEPLOY AT SPAWN POINT <span class="payout">START ↗</span>
             </button>
+            <a href="${mainWorldHref}" class="dispatch-deploy-btn world-btn" id="dispatch-join-world-btn">
+              &gt; JOIN MAIN WORLD (ISLAND 1) <span class="payout">LIVE ↗</span>
+            </a>
           </div>
-          <div class="dispatch-hint">CLICK MISSION OR PRESS [↑/↓] TO SELECT · [ENTER] / [SPACE] TO DEPLOY · [\`] VERSION INFO</div>
+          <div class="dispatch-hint">CLICK OR [↑/↓] SELECT · [ENTER]/[SPACE] DEPLOY · EDIT CALLSIGN ABOVE · [\`] VERSION INFO</div>
         </div>
         <aside class="dispatch-visuals">
           <div class="dispatch-truck-wrap">
@@ -180,6 +261,23 @@ export class MissionStartScene {
       </div>
     `
 
+    this.nameInput = this.terminal.querySelector('#dispatch-session-name')
+    this.nameInput.value = currentSessionName
+    this.nameInput.addEventListener('input', () => {
+      setSessionName(this.nameInput.value)
+    })
+    this.nameInput.addEventListener('change', () => {
+      setSessionName(this.nameInput.value)
+    })
+    this.nameInput.addEventListener('keydown', event => {
+      event.stopPropagation()
+      if (event.code === 'Enter') {
+        event.preventDefault()
+        setSessionName(this.nameInput.value)
+        this.nameInput.blur()
+      }
+    })
+
     const missionList = this.terminal.querySelector('#dispatch-mission-list')
     missionList.addEventListener('click', event => {
       const row = event.target.closest('[data-mission]')
@@ -187,6 +285,24 @@ export class MissionStartScene {
       const clickedMission = Number(row.dataset.mission)
       this.selectMission(clickedMission)
     })
+
+    const worldOption = this.terminal.querySelector('#dispatch-world-option')
+    worldOption.addEventListener('click', () => {
+      if (this.isTransitioning) return
+      this.selectMission('conquest')
+    })
+
+    const syncNameBeforeNavigate = () => {
+      if (this.nameInput) {
+        setSessionName(this.nameInput.value)
+      }
+    }
+    this.terminal
+      .querySelector('#dispatch-world-jump-link')
+      .addEventListener('click', syncNameBeforeNavigate)
+    this.terminal
+      .querySelector('#dispatch-join-world-btn')
+      .addEventListener('click', syncNameBeforeNavigate)
 
     const startItem = this.terminal.querySelector('[data-action="start"]')
     startItem.addEventListener('click', () => {
@@ -207,6 +323,13 @@ export class MissionStartScene {
   }
 
   selectMission(missionId) {
+    if (missionId === 'conquest') {
+      this.selectedMission = 'conquest'
+      setEmojiFavicon(CONQUEST_WORLD_DEF.favicon)
+      this.updateSelectionUI()
+      this.renderMap(false)
+      return
+    }
     const def = getMissionDef(missionId)
     if (this.selectedMission !== def.id) {
       this.selectedMission = def.id
@@ -218,14 +341,21 @@ export class MissionStartScene {
   }
 
   updateSelectionUI() {
-    const def = getMissionDef(this.selectedMission)
+    const isConquest = this.selectedMission === 'conquest'
+    const def = isConquest ? CONQUEST_WORLD_DEF : getMissionDef(this.selectedMission)
+    const completedSet = getCompletedMissions()
     const distMeters = Math.round(
       Math.hypot(this.towerPos.x - this.spawnPos.x, this.towerPos.z - this.spawnPos.z)
     )
 
     const subheader = this.terminal.querySelector('#dispatch-mission-subheader')
     if (subheader) {
-      subheader.textContent = `${def.title} (${distMeters}M)`
+      if (isConquest) {
+        subheader.textContent = `${def.title} · 8 SECTORS`
+      } else {
+        const doneSuffix = completedSet.has(def.id) ? ' · [COMPLETED ✓]' : ''
+        subheader.textContent = `${def.title} (${distMeters}M)${doneSuffix}`
+      }
     }
 
     const desc = this.terminal.querySelector('#dispatch-mission-desc')
@@ -243,8 +373,18 @@ export class MissionStartScene {
       mapLabel.textContent = def.mapLabel
     }
 
+    const deployBtn = this.terminal.querySelector('#dispatch-deploy-btn')
+    if (deployBtn) {
+      deployBtn.innerHTML = isConquest
+        ? `&gt; LAUNCH PERSISTENT WORLD <span class="payout">JOIN ISLAND 1 ↗</span>`
+        : `&gt; DEPLOY TRAINING ${def.code} <span class="payout">START ↗</span>`
+    }
+
     this.terminal.querySelectorAll('[data-mission]').forEach(row => {
-      const active = Number(row.dataset.mission) === this.selectedMission
+      const rowKey = row.dataset.mission
+      const active = isConquest
+        ? rowKey === 'conquest'
+        : Number(rowKey) === this.selectedMission
       row.classList.toggle('selected', active)
       const marker = row.querySelector('.marker')
       if (marker) marker.textContent = active ? '>' : ' '
@@ -477,13 +617,23 @@ export class MissionStartScene {
 
   handleKeyDown(event) {
     if (this.isTransitioning) return
+    if (
+      event.target &&
+      (event.target.tagName === 'INPUT' ||
+        event.target.tagName === 'TEXTAREA' ||
+        event.target.isContentEditable)
+    ) {
+      return
+    }
+    const order = [1, 2, 3, 'conquest']
+    const curIdx = Math.max(0, order.indexOf(this.selectedMission))
     if (event.code === 'ArrowUp') {
       event.preventDefault()
-      const next = ((this.selectedMission + 1) % 3) + 1
+      const next = order[(curIdx + order.length - 1) % order.length]
       this.selectMission(next)
     } else if (event.code === 'ArrowDown') {
       event.preventDefault()
-      const next = (this.selectedMission % 3) + 1
+      const next = order[(curIdx + 1) % order.length]
       this.selectMission(next)
     } else if (event.code === 'Digit1') {
       this.selectMission(1)
@@ -491,6 +641,8 @@ export class MissionStartScene {
       this.selectMission(2)
     } else if (event.code === 'Digit3') {
       this.selectMission(3)
+    } else if (event.code === 'Digit4') {
+      this.selectMission('conquest')
     } else if (event.code === 'Enter' || event.code === 'Space') {
       event.preventDefault()
       this.confirm()
@@ -498,6 +650,13 @@ export class MissionStartScene {
   }
 
   confirm() {
+    if (this.nameInput) {
+      setSessionName(this.nameInput.value)
+    }
+    if (this.selectedMission === 'conquest') {
+      window.location.assign(assetPath('/p1/conquest.html?island=island-1'))
+      return
+    }
     this.isTransitioning = true
     trackMissionStart(this.selectedMission)
     this.root.classList.add('transitioning')

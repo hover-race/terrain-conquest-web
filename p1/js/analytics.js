@@ -24,6 +24,9 @@ export const FUNNEL_STEPS = [
 let sessionId = null
 let pageLoadTracked = false
 
+const SESSION_NAME_KEY = 'cq_session_name'
+const COMPLETED_MISSIONS_KEY = 'cq_completed_missions'
+
 function getSessionId() {
   if (sessionId) return sessionId
   const existing = window.sessionStorage.getItem('cq_analytics_session_id')
@@ -34,6 +37,59 @@ function getSessionId() {
   sessionId = `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`
   window.sessionStorage.setItem('cq_analytics_session_id', sessionId)
   return sessionId
+}
+
+export function getSessionName() {
+  return (window.localStorage.getItem(SESSION_NAME_KEY) || '').trim()
+}
+
+export function setSessionName(name) {
+  const cleaned = String(name || '')
+    .trim()
+    .slice(0, 24)
+  if (cleaned) {
+    window.localStorage.setItem(SESSION_NAME_KEY, cleaned)
+  } else {
+    window.localStorage.removeItem(SESSION_NAME_KEY)
+  }
+
+  const db = getFirestoreDb()
+  if (db) {
+    const sid = getSessionId()
+    db.collection('conquest_analytics')
+      .doc(`session_${sid}`)
+      .set(
+        {
+          type: 'session',
+          sessionId: sid,
+          sessionName: cleaned,
+          updated_at: Date.now(),
+        },
+        { merge: true }
+      )
+  }
+  return cleaned
+}
+
+export function getCompletedMissions() {
+  const raw = window.localStorage.getItem(COMPLETED_MISSIONS_KEY)
+  if (!raw) return new Set()
+  const arr = JSON.parse(raw)
+  return new Set(Array.isArray(arr) ? arr.map(Number).filter(n => n === 1 || n === 2 || n === 3) : [])
+}
+
+export function markMissionCompleted(missionId) {
+  const id = Number(missionId)
+  if (id !== 1 && id !== 2 && id !== 3) return getCompletedMissions()
+  const set = getCompletedMissions()
+  set.add(id)
+  window.localStorage.setItem(COMPLETED_MISSIONS_KEY, JSON.stringify([...set].sort()))
+  return set
+}
+
+export function isTrainingCompleted() {
+  const set = getCompletedMissions()
+  return set.has(1) && set.has(2) && set.has(3)
 }
 
 export function getTodayDateString() {
@@ -107,6 +163,7 @@ export function trackEvent(eventName, meta = {}) {
       { merge: true }
     )
 
+  const sName = getSessionName()
   const sessionPatch = {
     type: 'session',
     sessionId: sid,
@@ -118,6 +175,10 @@ export function trackEvent(eventName, meta = {}) {
     counts: {
       [eventName]: inc,
     },
+  }
+
+  if (sName) {
+    sessionPatch.sessionName = sName
   }
 
   if (eventName === 'page_load') {
@@ -158,6 +219,7 @@ export function trackMissionStart(missionId) {
 export function trackMissionWin(missionId, extra = {}) {
   const id = Number(missionId)
   if (id === 1 || id === 2 || id === 3) {
+    markMissionCompleted(id)
     return trackEvent(`m${id}_win`, { missionId: id, ...extra })
   }
   return null

@@ -505,9 +505,17 @@ export class RemoteTruck {
   applyNetworkState(state) {
     this.targetPos.set(state.x, state.y, state.z)
     this.targetQuat.set(state.qx, state.qy, state.qz, state.qw)
+    let needsRedraw = false
     if (state.team && state.team !== this.team) {
       this.team = state.team
       this.teamBadgeMat.color.setHex(this.team === 'red' ? 0xff4d4d : 0x4da6ff)
+      needsRedraw = true
+    }
+    if (state.name && state.name !== this.playerName) {
+      this.playerName = state.name
+      needsRedraw = true
+    }
+    if (needsRedraw) {
       this.drawBillboard()
     }
   }

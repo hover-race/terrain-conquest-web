@@ -1,1 +1,1 @@
-gunner view & ballistics: smooth camera transitions, side-mounted gunner cam with barrel recoil, clamped gun elevation, parabolic shots, M3 -> Island 1 multiplayer link
+welcome page: session name tracked in analytics, training vs main world flows, training completion markers, direct link to persistent multiplayer session

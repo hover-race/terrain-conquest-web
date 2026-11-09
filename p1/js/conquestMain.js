@@ -17,7 +17,7 @@ import {
   AiRaiderTruck,
 } from './conquestEntities.js'
 import { ConquestNet, RemoteTruck } from './conquestNet.js'
-import { initAnalytics, trackEvent } from './analytics.js'
+import { initAnalytics, trackEvent, getSessionName } from './analytics.js'
 
 const CONQUEST_WEAPONS = {
   machineGun: {
@@ -994,6 +994,7 @@ class ConquestScene extends Scene3D {
     if (this.net && this.netBroadcastTimer <= 0) {
       this.netBroadcastTimer = 0.085
       this.net.publishTruckState({
+        name: getSessionName() || undefined,
         team: this.playerTeam,
         x: Number(playerPos.x.toFixed(2)),
         y: Number(playerPos.y.toFixed(2)),
